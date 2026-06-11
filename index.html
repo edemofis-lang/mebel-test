@@ -31,11 +31,22 @@
     </div>
 
     <div class="step" data-step="2">
-        <h2>Наполнение</h2>
-        <label>Кол-во дверей</label> <input type="number" id="doors" value="2">
-        <label>Выдвижные ящики (шт)</label> <input type="number" id="drawers" value="2">
-        <label>Полки (шт)</label> <input type="number" id="shelves" value="5">
+    <h2>Выберите вариант наполнения</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <label style="cursor: pointer; text-align: center;">
+            <input type="radio" name="layout" value="classic" checked>
+            <img src="https://via.placeholder.com/150/e67e22/ffffff?text=Классика" style="width:100%; border-radius:8px;">
+            <p style="font-size: 12px;">Полки + Штанга</p>
+        </label>
+        <label style="cursor: pointer; text-align: center;">
+            <input type="radio" name="layout" value="drawers" >
+            <img src="https://via.placeholder.com/150/2c3e50/ffffff?text=С ящиками" style="width:100%; border-radius:8px;">
+            <p style="font-size: 12px;">Полки + 3 Ящика</p>
+        </label>
     </div>
+    
+    <label>Кол-во дверей</label> <input type="number" id="doors" value="2">
+</div>
 
     <div class="step" data-step="3">
         <h2>Материалы фасада</h2>

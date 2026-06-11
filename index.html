@@ -2,13 +2,13 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Калькулятор шкафа</title>
+    <title>Калькулятор шкафа v3</title>
     <style>
         body { font-family: sans-serif; max-width: 500px; margin: 30px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
-        label { display: block; margin-top: 10px; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
         input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; }
-        button { width: 100%; padding: 15px; background: #d35400; color: white; border: none; border-radius: 5px; margin-top: 20px; cursor: pointer; }
-        #result { margin-top: 20px; padding: 15px; background: #fff3e0; border: 1px solid #ffe0b2; text-align: center; font-size: 20px; font-weight: bold; }
+        button { width: 100%; padding: 15px; background: #2980b9; color: white; border: none; border-radius: 5px; margin-top: 20px; cursor: pointer; }
+        #result { margin-top: 20px; padding: 15px; background: #ebf5fb; border: 1px solid #aed6f1; text-align: center; font-size: 20px; font-weight: bold; color: #21618c; }
     </style>
 </head>
 <body>
@@ -28,7 +28,10 @@
 <label>Высота (см)</label>
 <input type="number" id="h" value="200">
 
-<button onclick="calc()">Рассчитать стоимость</button>
+<label>Глубина (см)</label>
+<input type="number" id="d" value="60">
+
+<button onclick="calc()">Рассчитать</button>
 
 <div id="result">Введите параметры</div>
 
@@ -37,16 +40,20 @@ function calc() {
     let priceM2 = Number(document.getElementById("pricePerM2").value);
     let w = Number(document.getElementById("w").value);
     let h = Number(document.getElementById("h").value);
+    let d = Number(document.getElementById("d").value);
 
-    // Площадь в м2
+    // 1. Площадь фасада в м2
     let area = (w * h) / 10000;
     
-    // Формула: (Площадь * цена материала * коэф. расхода) + работа/фурнитура
-    // Коэф. 3 учитывает корпус и полки, 1.5 - работа и фурнитура
-    let finalPrice = (area * priceM2 * 3) * 1.5;
+    // 2. Коэффициент объема (чем глубже шкаф, тем дороже): 
+    // при глубине 60 см d_factor = 1.0, при 40 см будет меньше
+    let d_factor = d / 60;
+    
+    // 3. Формула: (Площадь фасада * цена * 3 (корпус) * d_factor) + наценка (работа)
+    let finalPrice = (area * priceM2 * 3 * d_factor) * 1.5;
 
     document.getElementById("result").innerHTML = 
-        "Примерная цена: " + Math.round(finalPrice).toLocaleString() + " руб. ПМР";
+        "Итого: " + Math.round(finalPrice).toLocaleString() + " руб. ПМР";
 }
 </script>
 

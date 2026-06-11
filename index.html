@@ -2,69 +2,94 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Профессиональный расчет шкафа</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro-Калькулятор Шкафов</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f0f0; padding: 40px; display: flex; justify-content: center; }
-        .app-container { background: white; padding: 40px; border-radius: 20px; width: 100%; max-width: 800px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .layout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-        .controls { display: flex; flex-direction: column; gap: 20px; }
-        .visual-area { border: 2px solid #eee; border-radius: 15px; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 300px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
-        .price-total { font-size: 32px; color: #2c3e50; font-weight: bold; border-top: 2px solid #f0f0f0; padding-top: 20px; margin-top: 20px; }
+        :root { --accent: #e67e22; --bg: #f8f9fa; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .calc-card { background: white; width: 100%; max-width: 600px; padding: 30px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
+        .step { display: none; } .step.active { display: block; }
+        h2 { margin-bottom: 20px; color: #2d3436; }
+        .svg-container { width: 100%; height: 300px; border: 1px solid #eee; border-radius: 10px; margin-bottom: 20px; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #dfe6e9; border-radius: 8px; box-sizing: border-box; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        button { flex: 1; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .next { background: var(--accent); color: white; }
+        .prev { background: #dfe6e9; }
+        .price { font-size: 24px; font-weight: 800; color: var(--accent); text-align: center; margin: 20px 0; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <h1>Конструктор шкафа-купе</h1>
-    <div class="layout-grid">
-        <div class="controls">
-            <div>
-                <label>Ширина корпуса (мм)</label>
-                <input type="number" id="width" value="2000" oninput="calculatePrice()">
-            </div>
-            <div>
-                <label>Количество полок</label>
-                <input type="number" id="shelves" value="3" oninput="calculatePrice()">
-            </div>
-            <div>
-                <label>Выдвижные ящики (комплект)</label>
-                <input type="number" id="drawers" value="2" oninput="calculatePrice()">
-            </div>
-            <div>
-                <label>Материал фасада</label>
-                <select id="material" onchange="calculatePrice()">
-                    <option value="1.0">ЛДСП Стандарт</option>
-                    <option value="1.5">МДФ Премиум</option>
-                </select>
-            </div>
-            <div class="price-total" id="finalPrice">0 руб. ПМР</div>
-        </div>
+<div class="calc-card">
+    <div class="step active" id="s1">
+        <h2>Шаг 1: Габариты проема</h2>
+        <input type="number" id="w" placeholder="Ширина (мм)" oninput="updateSvg()">
+        <input type="number" id="h" placeholder="Высота (мм)" oninput="updateSvg()">
+        <button class="next" onclick="nextStep(2)">Далее</button>
+    </div>
 
-        <div class="visual-area">
-            <p>Визуализация схемы шкафа</p>
+    <div class="step" id="s2">
+        <h2>Шаг 2: Наполнение</h2>
+        <svg class="svg-container" id="svgView" viewBox="0 0 300 300">
+            <rect id="frame" x="50" y="20" width="200" height="250" fill="none" stroke="#2d3436" stroke-width="2"/>
+            <g id="internals"></g>
+        </svg>
+        <input type="number" id="shelves" placeholder="Кол-во полок" oninput="updateSvg()">
+        <div class="btn-group">
+            <button class="prev" onclick="nextStep(1)">Назад</button>
+            <button class="next" onclick="nextStep(3)">Далее</button>
         </div>
+    </div>
+
+    <div class="step" id="s4">
+        <h2>Ваш заказ</h2>
+        <div class="price" id="totalPrice">0 руб.</div>
+        <input type="text" id="name" placeholder="Имя">
+        <input type="tel" id="phone" placeholder="+373 (XX) XXX-XXX">
+        <button class="next" onclick="sendData()">Получить расчет</button>
     </div>
 </div>
 
 <script>
-    function calculatePrice() {
-        const w = parseFloat(document.getElementById('width').value) || 0;
-        const s = parseInt(document.getElementById('shelves').value) || 0;
-        const d = parseInt(document.getElementById('drawers').value) || 0;
-        const mat = parseFloat(document.getElementById('material').value);
-
-        // Базовая цена (лист ЛДСП) + наполнение
-        const pricePerMeter = 2500;
-        const shelfPrice = 350;
-        const drawerPrice = 1200;
-
-        let total = ((w / 1000) * pricePerMeter) + (s * shelfPrice) + (d * drawerPrice);
-        total = total * mat;
-
-        document.getElementById('finalPrice').innerText = Math.round(total) + " руб. ПМР";
+    function updateSvg() {
+        const w = document.getElementById('w').value || 2000;
+        const shelves = document.getElementById('shelves').value || 0;
+        const group = document.getElementById('internals');
+        group.innerHTML = '';
+        
+        // Масштабируем SVG чертеж динамически
+        for(let i = 1; i <= shelves; i++) {
+            let y = 20 + (250 / (Number(shelves) + 1)) * i;
+            group.innerHTML += `<line x1="50" y1="${y}" x2="250" y2="${y}" stroke="black" stroke-width="1"/>`;
+        }
+        calculate();
     }
-    calculatePrice();
+
+    function calculate() {
+        const w = document.getElementById('w').value || 0;
+        const s = document.getElementById('shelves').value || 0;
+        const price = (w * 2.5) + (s * 350);
+        document.getElementById('totalPrice').innerText = Math.round(price) + " руб. ПМР";
+    }
+
+    function nextStep(n) {
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById('s' + n).classList.add('active');
+    }
+
+    function sendData() {
+        const data = {
+            name: document.getElementById('name').value,
+            phone: document.getElementById('phone').value,
+            price: document.getElementById('totalPrice').innerText
+        };
+        // Сюда вставлять fetch для Telegram Bot API
+        console.log("Отправка:", data);
+        alert("Заявка принята! Мы перезвоним вам.");
+    }
+    
+    updateSvg();
 </script>
 </body>
 </html>

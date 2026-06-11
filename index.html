@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Конструктор шкафа</title>
+    <title>Профессиональный конструктор шкафа</title>
     <style>
         :root { --primary: #e67e22; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
@@ -25,22 +25,25 @@
 <div class="calc-card">
     <div class="step active" data-step="1">
         <h2>Шаг 1: Размеры (мм)</h2>
-        <label>Ширина (мм)</label> <input type="number" id="w" value="2000">
-        <label>Высота (мм)</label> <input type="number" id="h" value="2400">
+        <label>Ширина (мм)</label> <input type="number" id="w" value="2000" oninput="renderWardrobe()">
+        <label>Высота (мм)</label> <input type="number" id="h" value="2400" oninput="renderWardrobe()">
         <label>Глубина (мм)</label> <input type="number" id="d" value="600">
     </div>
 
     <div class="step" data-step="2">
         <h2>Шаг 2: Наполнение</h2>
-        <div id="visualizer" style="width: 100%; height: 200px; background: #fff; border: 1px solid #ddd; border-radius: 8px; margin: 15px 0;">
-            <svg id="wardrobeSvg" viewBox="0 0 200 200" width="100%" height="100%">
-                <rect x="20" y="10" width="160" height="180" fill="none" stroke="#333" stroke-width="2"/>
+        <div id="visualizer" style="width: 100%; height: 250px; background: #fff; border: 1px solid #ddd; border-radius: 8px; margin: 15px 0; overflow: hidden;">
+            <svg id="wardrobeSvg" viewBox="0 0 200 250" width="100%" height="100%" preserveAspectRatio="none">
+                <rect x="20" y="20" width="160" height="210" fill="none" stroke="#333" stroke-width="2"/>
                 <g id="shelvesGroup"></g>
+                <g id="drawersGroup"></g>
+                <line x1="20" y1="20" x2="180" y2="20" stroke="#000" stroke-width="3"/>
             </svg>
         </div>
-        <label>Кол-во полок (2-6):</label> 
-        <input type="number" id="shelves" value="3" min="2" max="6" oninput="renderWardrobe()">
-        <label>Выдвижные ящики (шт)</label> <input type="number" id="drawers" value="2">
+        <label>Кол-во полок:</label> 
+        <input type="number" id="shelves" value="3" min="0" max="8" oninput="renderWardrobe()">
+        <label>Выдвижные ящики (шт):</label> 
+        <input type="number" id="drawers" value="2" min="0" max="6" oninput="renderWardrobe()">
     </div>
 
     <div class="step" data-step="3">
@@ -54,13 +57,13 @@
         <label>Фурнитура</label>
         <select id="hardware">
             <option value="500">Эконом (Linken)</option>
-            <option value="1500">Средний (GTV с доводчиками)</option>
-            <option value="4000">Премиум (Blum Австрия)</option>
+            <option value="1500">Средний (GTV)</option>
+            <option value="4000">Премиум (Blum)</option>
         </select>
     </div>
 
     <div class="step" data-step="4">
-        <h2>Ваш заказ</h2>
+        <h2>Итого</h2>
         <div class="price-box" id="final-price">0 руб. ПМР</div>
         <input type="text" id="name" placeholder="Ваше имя" style="margin-bottom:10px">
         <input type="tel" id="phone" placeholder="Телефон (+373 XX XXX XXX)">
@@ -80,26 +83,39 @@
         document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
         currentStep += dir;
         document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
-        
         document.getElementById('prevBtn').style.display = currentStep > 1 ? 'block' : 'none';
         document.getElementById('nextBtn').style.display = currentStep < 4 ? 'block' : 'none';
-        
-        if(currentStep === 2) renderWardrobe();
         if(currentStep === 4) calculate();
     }
 
     function renderWardrobe() {
-        let count = document.getElementById('shelves').value;
-        let group = document.getElementById('shelvesGroup');
-        group.innerHTML = '';
-        let spacing = 180 / (Number(count) + 1);
-        for (let i = 1; i <= count; i++) {
-            let y = 10 + (i * spacing);
+        let shelfCount = Number(document.getElementById('shelves').value);
+        let drawerCount = Number(document.getElementById('drawers').value);
+        let shelvesGroup = document.getElementById('shelvesGroup');
+        let drawersGroup = document.getElementById('drawersGroup');
+        
+        shelvesGroup.innerHTML = '';
+        drawersGroup.innerHTML = '';
+
+        // Полки
+        let shelfSpacing = 210 / (shelfCount + 1);
+        for (let i = 1; i <= shelfCount; i++) {
+            let y = 20 + (i * shelfSpacing);
             let shelf = document.createElementNS("http://www.w3.org/2000/svg", "line");
             shelf.setAttribute("x1", "20"); shelf.setAttribute("y1", y);
             shelf.setAttribute("x2", "180"); shelf.setAttribute("y2", y);
-            shelf.setAttribute("stroke", "#999"); shelf.setAttribute("stroke-width", "2");
-            group.appendChild(shelf);
+            shelf.setAttribute("stroke", "#999");
+            shelvesGroup.appendChild(shelf);
+        }
+
+        // Ящики
+        for (let i = 0; i < drawerCount; i++) {
+            let y = 225 - ((i + 1) * 30);
+            let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", "25"); rect.setAttribute("y", y);
+            rect.setAttribute("width", "150"); rect.setAttribute("height", "25");
+            rect.setAttribute("fill", "#ddd"); rect.setAttribute("stroke", "#999");
+            drawersGroup.appendChild(rect);
         }
     }
 
@@ -119,13 +135,9 @@
     }
 
     function sendData() {
-        let name = document.getElementById('name').value;
         let phone = document.getElementById('phone').value;
-        let price = document.getElementById('final-price').innerText;
-        
         if(!phone) return alert("Введите номер телефона!");
-        alert("Спасибо, " + name + "! Заявка на сумму " + price + " отправлена.");
-        console.log("Заявка:", {name, phone, price});
+        alert("Заявка успешно отправлена!");
     }
 
     renderWardrobe();

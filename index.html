@@ -87,14 +87,23 @@
     }
 
     function calculate() {
-        let w = document.getElementById('w').value, h = document.getElementById('h').value;
-        let mat = document.getElementById('material').value;
-        let hard = document.getElementById('hardware').value;
-        let drawers = document.getElementById('drawers').value;
+        let w = Number(document.getElementById('w').value);
+        let h = Number(document.getElementById('h').value);
+        let matPrice = Number(document.getElementById('material').value); // Цена м2 фасада
+        let hard = Number(document.getElementById('hardware').value); // Фурнитура
+        let drawers = Number(document.getElementById('drawers').value);
         
+        // 1. Площадь фасадов в м2
         let area = (w * h) / 10000;
-        let price = (area * mat * 3) + (drawers * 800) + Number(hard);
-        document.getElementById('final-price').innerText = Math.round(price) + " руб. ПМР";
+        
+        // 2. Базовая стоимость (фасады + корпус + работа)
+        // Считаем: площадь * цену материала * 1.5 (коэф. на каркас и кромку) + фиксированная работа 1500
+        let basePrice = (area * matPrice * 1.5) + 1500;
+        
+        // 3. Допы: ящики по 800 руб/шт + фурнитура
+        let total = basePrice + (drawers * 800) + hard;
+        
+        document.getElementById('final-price').innerText = Math.round(total) + " руб. ПМР";
     }
 
     function sendData() {

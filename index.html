@@ -1,146 +1,58 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Профессиональный конструктор шкафа</title>
+    <title>3D Конструктор Шкафа</title>
     <style>
-        :root { --primary: #e67e22; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
-        .calc-card { background: white; width: 100%; max-width: 500px; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .step { display: none; }
-        .step.active { display: block; }
-        h2 { color: #2c3e50; margin-top: 0; }
-        label { display: block; margin: 15px 0 5px; font-weight: 600; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btns { margin-top: 25px; display: flex; gap: 10px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .next-btn { background: var(--primary); color: white; }
-        .prev-btn { background: #95a5a6; color: white; }
-        .price-box { font-size: 1.5em; font-weight: bold; color: var(--primary); margin: 25px 0; text-align: center; padding: 15px; border: 2px dashed var(--primary); border-radius: 10px; }
+        body { margin: 0; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; }
+        #canvas-container { width: 100%; max-width: 600px; height: 400px; background: #eee; }
+        .controls { padding: 20px; width: 100%; max-width: 600px; }
     </style>
 </head>
 <body>
 
-<div class="calc-card">
-    <div class="step active" data-step="1">
-        <h2>Шаг 1: Размеры (мм)</h2>
-        <label>Ширина (мм)</label> <input type="number" id="w" value="2000" oninput="renderWardrobe()">
-        <label>Высота (мм)</label> <input type="number" id="h" value="2400" oninput="renderWardrobe()">
-        <label>Глубина (мм)</label> <input type="number" id="d" value="600">
-    </div>
+<div id="canvas-container"></div>
 
-    <div class="step" data-step="2">
-        <h2>Шаг 2: Наполнение</h2>
-        <div id="visualizer" style="width: 100%; height: 250px; background: #fff; border: 1px solid #ddd; border-radius: 8px; margin: 15px 0; overflow: hidden;">
-            <svg id="wardrobeSvg" viewBox="0 0 200 250" width="100%" height="100%" preserveAspectRatio="none">
-                <rect x="20" y="20" width="160" height="210" fill="none" stroke="#333" stroke-width="2"/>
-                <g id="shelvesGroup"></g>
-                <g id="drawersGroup"></g>
-                <line x1="20" y1="20" x2="180" y2="20" stroke="#000" stroke-width="3"/>
-            </svg>
-        </div>
-        <label>Кол-во полок:</label> 
-        <input type="number" id="shelves" value="3" min="0" max="8" oninput="renderWardrobe()">
-        <label>Выдвижные ящики (шт):</label> 
-        <input type="number" id="drawers" value="2" min="0" max="6" oninput="renderWardrobe()">
-    </div>
-
-    <div class="step" data-step="3">
-        <h2>Шаг 3: Материалы</h2>
-        <label>Тип фасада</label>
-        <select id="material">
-            <option value="450">ЛДСП (Стандарт)</option>
-            <option value="800">ЛДСП (Egger Premium)</option>
-            <option value="2800">МДФ глянец</option>
-        </select>
-        <label>Фурнитура</label>
-        <select id="hardware">
-            <option value="500">Эконом (Linken)</option>
-            <option value="1500">Средний (GTV)</option>
-            <option value="4000">Премиум (Blum)</option>
-        </select>
-    </div>
-
-    <div class="step" data-step="4">
-        <h2>Итого</h2>
-        <div class="price-box" id="final-price">0 руб. ПМР</div>
-        <input type="text" id="name" placeholder="Ваше имя" style="margin-bottom:10px">
-        <input type="tel" id="phone" placeholder="Телефон (+373 XX XXX XXX)">
-        <button class="next-btn" style="margin-top:15px" onclick="sendData()">Отправить заявку</button>
-    </div>
-
-    <div class="btns">
-        <button class="prev-btn" onclick="changeStep(-1)" id="prevBtn" style="display:none;">Назад</button>
-        <button class="next-btn" onclick="changeStep(1)" id="nextBtn">Далее</button>
-    </div>
+<div class="controls">
+    <label>Ширина (мм):</label> <input type="number" id="width" value="1800" onchange="updateScene()">
+    <label>Полки:</label> <input type="number" id="shelves" value="3" onchange="updateScene()">
+    <label>Ящики:</label> <input type="number" id="drawers" value="2" onchange="updateScene()">
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-    let currentStep = 1;
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffffff);
+    const camera = new THREE.PerspectiveCamera(45, 600/400, 0.1, 3000);
+    const renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(600, 400);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    function changeStep(dir) {
-        document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
-        currentStep += dir;
-        document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
-        document.getElementById('prevBtn').style.display = currentStep > 1 ? 'block' : 'none';
-        document.getElementById('nextBtn').style.display = currentStep < 4 ? 'block' : 'none';
-        if(currentStep === 4) calculate();
-    }
+    camera.position.set(2000, 1500, 2000);
+    camera.lookAt(0, 0, 0);
 
-    function renderWardrobe() {
-        let shelfCount = Number(document.getElementById('shelves').value);
-        let drawerCount = Number(document.getElementById('drawers').value);
-        let shelvesGroup = document.getElementById('shelvesGroup');
-        let drawersGroup = document.getElementById('drawersGroup');
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(1000, 1000, 1000);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x404040));
+
+    // Функция отрисовки шкафа
+    function updateScene() {
+        // Удаляем старый шкаф
+        while(scene.children.length > 2){ scene.remove(scene.children[2]); }
+
+        let w = document.getElementById('width').value;
+        let s = document.getElementById('shelves').value;
         
-        shelvesGroup.innerHTML = '';
-        drawersGroup.innerHTML = '';
+        // Рисуем корпус
+        const boxGeo = new THREE.BoxGeometry(w, 2300, 600);
+        const mat = new THREE.MeshPhongMaterial({color: 0xdeb887, wireframe: false});
+        const wardrobe = new THREE.Mesh(boxGeo, mat);
+        scene.add(wardrobe);
 
-        // Полки
-        let shelfSpacing = 210 / (shelfCount + 1);
-        for (let i = 1; i <= shelfCount; i++) {
-            let y = 20 + (i * shelfSpacing);
-            let shelf = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            shelf.setAttribute("x1", "20"); shelf.setAttribute("y1", y);
-            shelf.setAttribute("x2", "180"); shelf.setAttribute("y2", y);
-            shelf.setAttribute("stroke", "#999");
-            shelvesGroup.appendChild(shelf);
-        }
-
-        // Ящики
-        for (let i = 0; i < drawerCount; i++) {
-            let y = 225 - ((i + 1) * 30);
-            let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            rect.setAttribute("x", "25"); rect.setAttribute("y", y);
-            rect.setAttribute("width", "150"); rect.setAttribute("height", "25");
-            rect.setAttribute("fill", "#ddd"); rect.setAttribute("stroke", "#999");
-            drawersGroup.appendChild(rect);
-        }
+        renderer.render(scene, camera);
     }
 
-    function calculate() {
-        let w = Number(document.getElementById('w').value);
-        let h = Number(document.getElementById('h').value);
-        let matPrice = Number(document.getElementById('material').value);
-        let hard = Number(document.getElementById('hardware').value);
-        let drawers = Number(document.getElementById('drawers').value);
-        
-        let area = (w * h) / 1000000;
-        let basePrice = (area * matPrice * 2.5) + 2000;
-        let drawerPrice = drawers * (hard > 1000 ? 1200 : 700);
-        
-        let total = basePrice + drawerPrice + hard;
-        document.getElementById('final-price').innerText = Math.round(total) + " руб. ПМР";
-    }
-
-    function sendData() {
-        let phone = document.getElementById('phone').value;
-        if(!phone) return alert("Введите номер телефона!");
-        alert("Заявка успешно отправлена!");
-    }
-
-    renderWardrobe();
+    updateScene();
 </script>
 </body>
 </html>

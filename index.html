@@ -2,59 +2,110 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Калькулятор шкафа v3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор шкафа</title>
     <style>
-        body { font-family: sans-serif; max-width: 500px; margin: 30px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
-        label { display: block; margin-top: 10px; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; }
-        button { width: 100%; padding: 15px; background: #2980b9; color: white; border: none; border-radius: 5px; margin-top: 20px; cursor: pointer; }
-        #result { margin-top: 20px; padding: 15px; background: #ebf5fb; border: 1px solid #aed6f1; text-align: center; font-size: 20px; font-weight: bold; color: #21618c; }
+        :root { --primary: #e67e22; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .calc-card { background: white; width: 100%; max-width: 500px; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .step { display: none; }
+        .step.active { display: block; }
+        h2 { color: #2c3e50; margin-top: 0; }
+        label { display: block; margin: 15px 0 5px; font-weight: 600; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btns { margin-top: 25px; display: flex; gap: 10px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .next-btn { background: var(--primary); color: white; }
+        .prev-btn { background: #95a5a6; color: white; }
+        .price-box { font-size: 1.4em; font-weight: bold; color: var(--primary); margin: 20px 0; text-align: center; }
     </style>
 </head>
 <body>
 
-<h2>Расчет стоимости шкафа</h2>
+<div class="calc-card">
+    <div id="steps-container">
+        <div class="step active" data-step="1">
+            <h2>Шаг 1: Размеры</h2>
+            <label>Ширина (см)</label> <input type="number" id="w" value="200">
+            <label>Высота (см)</label> <input type="number" id="h" value="240">
+            <label>Глубина (см)</label> <input type="number" id="d" value="60">
+        </div>
 
-<label>Тип фасада</label>
-<select id="pricePerM2">
-    <option value="360">ЛДСП (360 руб/м²)</option>
-    <option value="750">Зеркало (750 руб/м²)</option>
-    <option value="2500">МДФ глянец (2500 руб/м²)</option>
-</select>
+        <div class="step" data-step="2">
+            <h2>Шаг 2: Наполнение</h2>
+            <label>Кол-во дверей</label> <input type="number" id="doors" value="2">
+            <label>Выдвижные ящики (шт)</label> <input type="number" id="drawers" value="2">
+            <label>Полки (шт)</label> <input type="number" id="shelves" value="5">
+        </div>
 
-<label>Ширина (см)</label>
-<input type="number" id="w" value="150">
+        <div class="step" data-step="3">
+            <h2>Шаг 3: Материалы</h2>
+            <label>Тип фасада</label>
+            <select id="material">
+                <option value="360">ЛДСП (360 р/м²)</option>
+                <option value="750">Зеркало (750 р/м²)</option>
+                <option value="2500">МДФ глянец (2500 р/м²)</option>
+            </select>
+        </div>
 
-<label>Высота (см)</label>
-<input type="number" id="h" value="200">
+        <div class="step" data-step="4">
+            <h2>Шаг 4: Фурнитура</h2>
+            <select id="hardware">
+                <option value="0">Эконом</option>
+                <option value="1500">Стандарт (доводчики)</option>
+                <option value="4000">Премиум (Blum)</option>
+            </select>
+            <div class="price-box" id="final-price">0 руб.</div>
+        </div>
 
-<label>Глубина (см)</label>
-<input type="number" id="d" value="60">
+        <div class="step" data-step="5">
+            <h2>Ваш дизайн-проект готов!</h2>
+            <p>Введите контакты, чтобы получить расчет и схему:</p>
+            <input type="text" id="name" placeholder="Имя">
+            <input type="tel" id="phone" placeholder="Телефон">
+            <button class="next-btn" onclick="sendData()">Получить проект</button>
+        </div>
+    </div>
 
-<button onclick="calc()">Рассчитать</button>
-
-<div id="result">Введите параметры</div>
+    <div class="btns">
+        <button class="prev-btn" onclick="changeStep(-1)" id="prevBtn" style="display:none;">Назад</button>
+        <button class="next-btn" onclick="changeStep(1)" id="nextBtn">Далее</button>
+    </div>
+</div>
 
 <script>
-function calc() {
-    let priceM2 = Number(document.getElementById("pricePerM2").value);
-    let w = Number(document.getElementById("w").value);
-    let h = Number(document.getElementById("h").value);
-    let d = Number(document.getElementById("d").value);
+    let currentStep = 1;
+    function changeStep(dir) {
+        document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+        currentStep += dir;
+        document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
+        
+        document.getElementById('prevBtn').style.display = currentStep > 1 && currentStep < 5 ? 'block' : 'none';
+        document.getElementById('nextBtn').style.display = currentStep < 4 ? 'block' : 'none';
+        
+        if(currentStep === 4) calculate();
+    }
 
-    // 1. Площадь фасада в м2
-    let area = (w * h) / 10000;
-    
-    // 2. Коэффициент объема (чем глубже шкаф, тем дороже): 
-    // при глубине 60 см d_factor = 1.0, при 40 см будет меньше
-    let d_factor = d / 60;
-    
-    // 3. Формула: (Площадь фасада * цена * 3 (корпус) * d_factor) + наценка (работа)
-    let finalPrice = (area * priceM2 * 3 * d_factor) * 1.5;
+    function calculate() {
+        let w = document.getElementById('w').value, h = document.getElementById('h').value;
+        let mat = document.getElementById('material').value;
+        let hard = document.getElementById('hardware').value;
+        let drawers = document.getElementById('drawers').value;
+        
+        let area = (w * h) / 10000;
+        let price = (area * mat * 3) + (drawers * 800) + Number(hard);
+        document.getElementById('final-price').innerText = Math.round(price) + " руб. ПМР";
+    }
 
-    document.getElementById("result").innerHTML = 
-        "Итого: " + Math.round(finalPrice).toLocaleString() + " руб. ПМР";
-}
+    function sendData() {
+        let data = {
+            phone: document.getElementById('phone').value,
+            price: document.getElementById('final-price').innerText
+        };
+        if(!data.phone) return alert("Введите телефон");
+        console.log("Отправка данных:", data);
+        alert("Спасибо! Мы свяжемся с вами.");
+    }
 </script>
 
 </body>

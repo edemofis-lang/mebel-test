@@ -2,47 +2,69 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Конструктор шкафа</title>
+    <title>Профессиональный расчет шкафа</title>
     <style>
-        body { font-family: sans-serif; background: #f4f4f4; display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; padding: 30px; border-radius: 15px; width: 100%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .input-row { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .result { font-size: 24px; font-weight: bold; color: #e67e22; text-align: center; margin-top: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f0f0; padding: 40px; display: flex; justify-content: center; }
+        .app-container { background: white; padding: 40px; border-radius: 20px; width: 100%; max-width: 800px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .layout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .controls { display: flex; flex-direction: column; gap: 20px; }
+        .visual-area { border: 2px solid #eee; border-radius: 15px; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 300px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+        .price-total { font-size: 32px; color: #2c3e50; font-weight: bold; border-top: 2px solid #f0f0f0; padding-top: 20px; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>Расчет шкафа</h2>
-    <div class="input-row">
-        <label>Ширина (мм)</label>
-        <input type="number" id="w" value="2000" oninput="calc()">
+<div class="app-container">
+    <h1>Конструктор шкафа-купе</h1>
+    <div class="layout-grid">
+        <div class="controls">
+            <div>
+                <label>Ширина корпуса (мм)</label>
+                <input type="number" id="width" value="2000" oninput="calculatePrice()">
+            </div>
+            <div>
+                <label>Количество полок</label>
+                <input type="number" id="shelves" value="3" oninput="calculatePrice()">
+            </div>
+            <div>
+                <label>Выдвижные ящики (комплект)</label>
+                <input type="number" id="drawers" value="2" oninput="calculatePrice()">
+            </div>
+            <div>
+                <label>Материал фасада</label>
+                <select id="material" onchange="calculatePrice()">
+                    <option value="1.0">ЛДСП Стандарт</option>
+                    <option value="1.5">МДФ Премиум</option>
+                </select>
+            </div>
+            <div class="price-total" id="finalPrice">0 руб. ПМР</div>
+        </div>
+
+        <div class="visual-area">
+            <p>Визуализация схемы шкафа</p>
+        </div>
     </div>
-    <div class="input-row">
-        <label>Кол-во полок</label>
-        <input type="number" id="shelves" value="3" oninput="calc()">
-    </div>
-    <div class="input-row">
-        <label>Кол-во ящиков</label>
-        <input type="number" id="drawers" value="2" oninput="calc()">
-    </div>
-    
-    <div class="result" id="total">0 руб. ПМР</div>
 </div>
 
 <script>
-    function calc() {
-        let w = document.getElementById('w').value;
-        let s = document.getElementById('shelves').value;
-        let d = document.getElementById('drawers').value;
-        
-        // Формула: база + цена полок + цена ящиков
-        let price = (w * 2) + (s * 300) + (d * 800);
-        document.getElementById('total').innerText = price + " руб. ПМР";
+    function calculatePrice() {
+        const w = parseFloat(document.getElementById('width').value) || 0;
+        const s = parseInt(document.getElementById('shelves').value) || 0;
+        const d = parseInt(document.getElementById('drawers').value) || 0;
+        const mat = parseFloat(document.getElementById('material').value);
+
+        // Базовая цена (лист ЛДСП) + наполнение
+        const pricePerMeter = 2500;
+        const shelfPrice = 350;
+        const drawerPrice = 1200;
+
+        let total = ((w / 1000) * pricePerMeter) + (s * shelfPrice) + (d * drawerPrice);
+        total = total * mat;
+
+        document.getElementById('finalPrice').innerText = Math.round(total) + " руб. ПМР";
     }
-    calc();
+    calculatePrice();
 </script>
 </body>
 </html>

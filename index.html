@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Калькулятор шкафа-купе</title>
+    <title>Конструктор шкафа</title>
     <style>
         :root { --primary: #e67e22; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
@@ -24,32 +24,28 @@
 
 <div class="calc-card">
     <div class="step active" data-step="1">
-        <h2>Размеры (мм)</h2>
+        <h2>Шаг 1: Размеры (мм)</h2>
         <label>Ширина (мм)</label> <input type="number" id="w" value="2000">
         <label>Высота (мм)</label> <input type="number" id="h" value="2400">
         <label>Глубина (мм)</label> <input type="number" id="d" value="600">
     </div>
 
     <div class="step" data-step="2">
-    <h2>Выберите вариант наполнения</h2>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <label style="cursor: pointer; text-align: center;">
-            <input type="radio" name="layout" value="classic" checked>
-            <img src="https://via.placeholder.com/150/e67e22/ffffff?text=Классика" style="width:100%; border-radius:8px;">
-            <p style="font-size: 12px;">Полки + Штанга</p>
-        </label>
-        <label style="cursor: pointer; text-align: center;">
-            <input type="radio" name="layout" value="drawers" >
-            <img src="https://via.placeholder.com/150/2c3e50/ffffff?text=С ящиками" style="width:100%; border-radius:8px;">
-            <p style="font-size: 12px;">Полки + 3 Ящика</p>
-        </label>
+        <h2>Шаг 2: Наполнение</h2>
+        <div id="visualizer" style="width: 100%; height: 200px; background: #fff; border: 1px solid #ddd; border-radius: 8px; margin: 15px 0;">
+            <svg id="wardrobeSvg" viewBox="0 0 200 200" width="100%" height="100%">
+                <rect x="20" y="10" width="160" height="180" fill="none" stroke="#333" stroke-width="2"/>
+                <g id="shelvesGroup"></g>
+            </svg>
+        </div>
+        <label>Кол-во полок (2-6):</label> 
+        <input type="number" id="shelves" value="3" min="2" max="6" oninput="renderWardrobe()">
+        <label>Выдвижные ящики (шт)</label> <input type="number" id="drawers" value="2">
     </div>
-    
-    <label>Кол-во дверей</label> <input type="number" id="doors" value="2">
-</div>
 
     <div class="step" data-step="3">
-        <h2>Материалы фасада</h2>
+        <h2>Шаг 3: Материалы</h2>
+        <label>Тип фасада</label>
         <select id="material">
             <option value="450">ЛДСП (Стандарт)</option>
             <option value="800">ЛДСП (Egger Premium)</option>
@@ -64,7 +60,7 @@
     </div>
 
     <div class="step" data-step="4">
-        <h2>Итого</h2>
+        <h2>Ваш заказ</h2>
         <div class="price-box" id="final-price">0 руб. ПМР</div>
         <input type="text" id="name" placeholder="Ваше имя" style="margin-bottom:10px">
         <input type="tel" id="phone" placeholder="Телефон (+373 XX XXX XXX)">
@@ -79,6 +75,7 @@
 
 <script>
     let currentStep = 1;
+
     function changeStep(dir) {
         document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
         currentStep += dir;
@@ -87,7 +84,23 @@
         document.getElementById('prevBtn').style.display = currentStep > 1 ? 'block' : 'none';
         document.getElementById('nextBtn').style.display = currentStep < 4 ? 'block' : 'none';
         
+        if(currentStep === 2) renderWardrobe();
         if(currentStep === 4) calculate();
+    }
+
+    function renderWardrobe() {
+        let count = document.getElementById('shelves').value;
+        let group = document.getElementById('shelvesGroup');
+        group.innerHTML = '';
+        let spacing = 180 / (Number(count) + 1);
+        for (let i = 1; i <= count; i++) {
+            let y = 10 + (i * spacing);
+            let shelf = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            shelf.setAttribute("x1", "20"); shelf.setAttribute("y1", y);
+            shelf.setAttribute("x2", "180"); shelf.setAttribute("y2", y);
+            shelf.setAttribute("stroke", "#999"); shelf.setAttribute("stroke-width", "2");
+            group.appendChild(shelf);
+        }
     }
 
     function calculate() {
@@ -97,7 +110,6 @@
         let hard = Number(document.getElementById('hardware').value);
         let drawers = Number(document.getElementById('drawers').value);
         
-        // Расчет в мм
         let area = (w * h) / 1000000;
         let basePrice = (area * matPrice * 2.5) + 2000;
         let drawerPrice = drawers * (hard > 1000 ? 1200 : 700);
@@ -112,12 +124,11 @@
         let price = document.getElementById('final-price').innerText;
         
         if(!phone) return alert("Введите номер телефона!");
-        
-        // СЮДА ВСТАВИШЬ ЛОГИКУ ОТПРАВКИ (например, fetch к боту)
         alert("Спасибо, " + name + "! Заявка на сумму " + price + " отправлена.");
         console.log("Заявка:", {name, phone, price});
     }
-</script>
 
+    renderWardrobe();
+</script>
 </body>
 </html>
